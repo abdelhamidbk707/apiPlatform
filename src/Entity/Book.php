@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use Carbon\Carbon;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use ApiPlatform\Core\Annotation\ApiResource;
@@ -9,7 +10,11 @@ use ApiPlatform\Core\Annotation\ApiResource;
  * A book.
  *
  * @ORM\Entity(repositoryClass="App\Repository\BookRepository")
- * @ApiResource()
+ * @ApiResource(
+ *     collectionOperations={"get", "post"},
+ *     itemOperations={"get","put","delete"},
+ *     shortName="Book"
+ * )
  */
 class Book
 {
@@ -72,5 +77,29 @@ class Book
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /**
+     * @param string $description
+     * @return $this
+     */
+    public function setTextDescription(string $description): self
+    {
+        $this->description = nl2br($description);
+
+        return $this;
+    }
+
+    /**
+     * @return \DateTimeInterface
+     */
+    public function getPublicationDate(): \DateTimeInterface
+    {
+        return $this->publicationDate;
+    }
+
+    public function getPublishedAtAgo(): string
+    {
+        return Carbon::instance($this->getPublicationDate())->diffForHumans();
     }
 }
