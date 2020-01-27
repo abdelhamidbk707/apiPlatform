@@ -1,0 +1,5 @@
+App\Entity\Book:
+  collectionOperations:
+    get: ~ # nothing more to add if we want to keep the default controller
+  itemOperations:
+    get: ~

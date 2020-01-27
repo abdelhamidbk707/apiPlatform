@@ -2,10 +2,15 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use Carbon\Carbon;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use ApiPlatform\Core\Annotation\ApiResource;
+use Symfony\Component\Serializer\Annotation\Groups;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
+use Symfony\Component\Validator\Constraints as Assert;
+
 /**
  * A book.
  *
@@ -13,17 +18,17 @@ use ApiPlatform\Core\Annotation\ApiResource;
  * @ApiResource(
  *     collectionOperations={"get", "post"},
  *     itemOperations={"get","put","delete"},
- *     shortName="Book"
+ *     normalizationContext={"groups"={"book_listing:read"},"swagger_definition_name"="Read"},
  * )
+ * @ApiFilter(BooleanFilter::class, properties={"isPublished"})
  */
 class Book
 {
     /**
-     * @var int The id of this book.
-     *
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @var string
+     * @ORM\Id()
+     * @ORM\GeneratedValue(strategy="UUID")
+     * @ORM\Column(type="string")
      */
     private $id;
 
@@ -36,14 +41,14 @@ class Book
 
     /**
      * @var string The title of this book.
-     *
+     * @Groups({"book_listing:read","book_listing:write"})
      * @ORM\Column
      */
     public $title;
 
     /**
      * @var string The description of this book.
-     *
+     * @Groups({"book_listing:read"})
      * @ORM\Column(type="text")
      */
     public $description;
@@ -57,10 +62,15 @@ class Book
 
     /**
      * @var \DateTimeInterface The publication date of this book.
-     *
      * @ORM\Column(type="datetime")
      */
     public $publicationDate;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean")
+     */
+    public $isPublished;
 
     /**
      * @var Review[] Available reviews for this book.
@@ -69,15 +79,20 @@ class Book
      */
     public $reviews;
 
-    public function __construct()
-    {
-        $this->reviews = new ArrayCollection();
-    }
-
-    public function getId(): ?int
+    /**
+     * @return string
+     */
+    public function getId(): string
     {
         return $this->id;
     }
+
+    public function __construct(string $title)
+    {
+        $this->reviews = new ArrayCollection();
+        $this->title = $title;
+    }
+
 
     /**
      * @param string $description
@@ -98,6 +113,10 @@ class Book
         return $this->publicationDate;
     }
 
+    /**
+     * @Groups({"book_listing:read"})
+     * @return string
+     */
     public function getPublishedAtAgo(): string
     {
         return Carbon::instance($this->getPublicationDate())->diffForHumans();
